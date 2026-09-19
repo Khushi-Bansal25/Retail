@@ -1,0 +1,60 @@
+{
+  "name": "Retail Sales Poppy Pastel Theme",
+  "dataColors": [
+    "#ED93B1",
+    "#85B7EB",
+    "#FAC775",
+    "#97C459",
+    "#AFA9EC",
+    "#5DCAA5"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#2C2C2A",
+  "foregroundNeutralSecondary": "#5F5E5A",
+  "tableAccent": "#85B7EB",
+  "good": "#97C459",
+  "neutral": "#FAC775",
+  "bad": "#D85A30",
+  "maximum": "#85B7EB",
+  "center": "#FAC775",
+  "minimum": "#F1EFE8",
+  "null": "#D3D1C7",
+  "textClasses": {
+    "callout": {
+      "fontSize": 24,
+      "color": "#85B7EB"
+    },
+    "title": {
+      "fontSize": 14,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#2C2C2A"
+    },
+    "label": {
+      "fontSize": 11,
+      "color": "#5F5E5A"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": { "solid": { "color": "#FFFFFF" } },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "radius": 10,
+            "color": { "solid": { "color": "#EEEEEE" } }
+          }
+        ],
+        "outspacePane": [
+          { "backgroundColor": { "solid": { "color": "#FFFFFF" } } }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,152 @@
+/* =============================================================
+   Case Study 2: Retail Sales & Customer Insights Dashboard
+   Phase 4: Power BI - Dedicated Measures Table
+
+   STEP 1 - Create the table itself:
+   In Power BI Desktop: Home tab > Enter Data > name it "_Measures"
+   > add one column called "Column1" with one blank row > Load.
+   (Or paste this DAX as a calculated table instead:)
+
+   _Measures = {BLANK()}
+
+   STEP 2 - Move every measure below into this table:
+   Create each measure with New Measure while "_Measures" is
+   selected in the Fields pane (or create it anywhere, then in the
+   Fields pane right-click the measure > Home Table > _Measures).
+   This keeps all 20 measures in one clean folder instead of
+   scattered across Fact_Sales / Dim_Customer / Dim_Product.
+
+   STEP 3 (once) - Date table, needed for the 3 Growth Rate measures:
+   Date = CALENDAR(MIN(Fact_Sales[Timestamp]), MAX(Fact_Sales[Timestamp]))
+   Then: Table tools > Mark as Date Table > pick the Date column.
+   Relationship needed: Fact_Sales[Timestamp] (many) -> Date[Date] (one).
+   ============================================================= */
+
+
+-- =============================================================
+-- SALES PERFORMANCE
+-- =============================================================
+
+-- 1. Total Sales Revenue
+Total Sales Revenue =
+SUM(Fact_Sales[SalesAmount])
+
+-- 2. Total Units Sold
+Total Units Sold =
+SUM(Fact_Sales[Quantity])
+
+-- 3. Total Transactions
+Total Transactions =
+COUNTROWS(Fact_Sales)
+
+-- 4. Average Transaction Value (ATV)
+Average Transaction Value =
+DIVIDE([Total Sales Revenue], [Total Transactions], 0)
+
+-- 5. Sales Growth Rate % - Monthly
+Sales Growth Rate % (Monthly) =
+VAR CurrentRevenue = [Total Sales Revenue]
+VAR PriorRevenue =
+    CALCULATE([Total Sales Revenue], DATEADD('Date'[Date], -1, MONTH))
+RETURN
+DIVIDE(CurrentRevenue - PriorRevenue, PriorRevenue, 0) * 100
+
+-- 6. Sales Growth Rate % - Quarterly
+Sales Growth Rate % (Quarterly) =
+VAR CurrentRevenue = [Total Sales Revenue]
+VAR PriorRevenue =
+    CALCULATE([Total Sales Revenue], DATEADD('Date'[Date], -1, QUARTER))
+RETURN
+DIVIDE(CurrentRevenue - PriorRevenue, PriorRevenue, 0) * 100
+
+-- 7. Sales Growth Rate % - Yearly
+Sales Growth Rate % (Yearly) =
+VAR CurrentRevenue = [Total Sales Revenue]
+VAR PriorRevenue =
+    CALCULATE([Total Sales Revenue], DATEADD('Date'[Date], -1, YEAR))
+RETURN
+DIVIDE(CurrentRevenue - PriorRevenue, PriorRevenue, 0) * 100
+
+-- 8. Category Revenue (use with Dim_Product[Category] on rows/axis)
+Category Revenue =
+[Total Sales Revenue]
+
+-- 9. Category Revenue % of Total (for Sales by Product Category visuals)
+Category Revenue % of Total =
+DIVIDE([Total Sales Revenue], CALCULATE([Total Sales Revenue], ALL(Dim_Product)), 0) * 100
+
+-- 10. Region Revenue (use with Dim_Region[RegionName] on rows/axis)
+Region Revenue =
+[Total Sales Revenue]
+
+-- 11. Region Revenue % of Total (for Sales by Region visuals)
+Region Revenue % of Total =
+DIVIDE([Total Sales Revenue], CALCULATE([Total Sales Revenue], ALL(Dim_Region)), 0) * 100
+
+
+-- =============================================================
+-- CUSTOMER INSIGHTS
+-- =============================================================
+
+-- 12. Customer Lifetime Value (CLV) - average revenue per customer
+Customer Lifetime Value =
+DIVIDE([Total Sales Revenue], DISTINCTCOUNT(Fact_Sales[CustomerID]), 0)
+
+-- 13. Distinct Customers (for Customer Demographics Analysis visuals -
+--     slice this by Dim_Customer[Gender] or Dim_Region[RegionName])
+Distinct Customers =
+DISTINCTCOUNT(Fact_Sales[CustomerID])
+
+-- 14. Average Order Quantity
+Average Order Quantity =
+AVERAGE(Fact_Sales[Quantity])
+
+
+-- =============================================================
+-- PRODUCT PERFORMANCE
+-- =============================================================
+
+-- 15. Product Revenue Rank (for Top-Selling Products visuals)
+Product Revenue Rank =
+RANKX(ALL(Dim_Product[ProductName]), [Total Sales Revenue], , DESC)
+
+-- 16. Top 10 Products Revenue (only sums revenue for products ranked 1-10;
+--     use inside a table/chart already filtered by ProductName)
+Top 10 Products Revenue =
+IF([Product Revenue Rank] <= 10, [Total Sales Revenue], BLANK())
+
+
+-- =============================================================
+-- SEASONALITY (part of "Understanding Complex Purchasing Patterns")
+-- =============================================================
+
+-- 17. Monthly Revenue Trend (use with 'Date'[MonthName] or Fact_Sales[Timestamp].[Month] on axis)
+Monthly Revenue Trend =
+[Total Sales Revenue]
+
+
+-- =============================================================
+-- CALCULATED COLUMNS (not measures - add these on their source table,
+-- NOT in _Measures; calculated columns must live on a data table)
+-- =============================================================
+
+-- On Dim_Customer:
+-- Full Name = Dim_Customer[FirstName] & " " & Dim_Customer[LastName]
+
+-- On Fact_Sales:
+-- Month Year = FORMAT(Fact_Sales[Timestamp], "MMM YYYY")
+-- Revenue Band =
+--     SWITCH(
+--         TRUE(),
+--         Fact_Sales[SalesAmount] < 500,  "Low (<500)",
+--         Fact_Sales[SalesAmount] < 2000, "Medium (500-2000)",
+--         "High (2000+)"
+--     )
+
+
+-- =============================================================
+-- NOT CALCULABLE - flagged, not fabricated (same gap as the SQL KPIs)
+-- =============================================================
+-- Product Return Rate : no returns field anywhere in the source data
+-- Cost of Goods Sold   : no unit cost field anywhere in the source data
+-- Promotions           : no promotions field anywhere in the source data
